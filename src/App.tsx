@@ -4,6 +4,9 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import SignIn from './Screens/SignIn';
 import HomeScreen from './Screens/HomeScreen';
+import Notification from './Screens/Notification';
+import MyReport from './Screens/MyReport';
+import NewReport from './Screens/NewReport';
 
 
 export default function App() {
@@ -13,7 +16,10 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="SignIn" component={SignIn} />
+        <Stack.Screen name="MyReport" component={MyReport} />
+        <Stack.Screen name="NewReport" component={NewReport} />
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="Notification" component={Notification} />
       </Stack.Navigator>
     </NavigationContainer>
   );

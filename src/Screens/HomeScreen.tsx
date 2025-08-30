@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView from 'react-native-maps';
 import { Bell, BellDot, TriangleAlert } from 'lucide-react-native';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: any) {
   const [haveNotification, setHaveNotification] = useState(true);
   const [open, setOpen] = useState(true);
   return (
@@ -12,19 +12,19 @@ export default function HomeScreen() {
       {/*  Header */}
       <View style={styles.header}>
         {/* right side */}
-        <TouchableOpacity onPress={() => console.log('My Report')}>
+        <TouchableOpacity onPress={() => navigation.navigate('MyReport')}>
           <Text style={styles.headerText}>My Report</Text>
         </TouchableOpacity>
         {/* left side */}
         <View style={styles.headerIcons}>
           <TouchableOpacity
-            onPress={() => console.log('Notifications')}
+            onPress={() => navigation.navigate('Notification')}
             style={styles.iconContainer}
           >
             {haveNotification ? <BellDot color="red" /> : <Bell color="#000" />}
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => console.log('New Report')}
+            onPress={() => navigation.navigate('NewReport')}
             style={styles.iconContainer}
           >
             <TriangleAlert color="#000" />
@@ -65,7 +65,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
