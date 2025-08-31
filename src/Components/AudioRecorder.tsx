@@ -1,19 +1,87 @@
-import { Text, TouchableOpacity } from 'react-native';
 import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Mic, Square, Play, X } from 'lucide-react-native';
 
 export default function AudioRecorder({ onClose }: { onClose: () => void }) {
   return (
-    <TouchableOpacity onPress={onClose}>
-      <Text>Close</Text>
-    </TouchableOpacity>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Audio Recorder</Text>
+        <TouchableOpacity onPress={onClose}>
+          <X size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Main Controls */}
+      <View style={styles.controls}>
+        <TouchableOpacity style={styles.controlButton}>
+          <Mic size={36} color="red" />
+          <Text style={styles.label}>Record</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.controlButton}>
+          <Square size={36} color="black" />
+          <Text style={styles.label}>Stop</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.controlButton}>
+          <Play size={36} color="green" />
+          <Text style={styles.label}>Play</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Timer / Status */}
+      <View style={styles.footer}>
+        <Text style={styles.timer}>00:00</Text>
+      </View>
+    </View>
   );
 }
 
-
-
-
-
-
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    width: '100%',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 30,
+  },
+  controlButton: {
+    alignItems: 'center',
+  },
+  label: {
+    marginTop: 6,
+    fontSize: 14,
+    color: '#333',
+  },
+  footer: {
+    alignItems: 'center',
+  },
+  timer: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+});
 
 // import React, { useState, useEffect } from 'react';
 // import {

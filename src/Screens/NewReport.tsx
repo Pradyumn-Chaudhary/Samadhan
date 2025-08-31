@@ -141,6 +141,7 @@ export default function NewReport() {
 
             {/* Text Input with Mic Icon */}
             {showRecorder ? (
+              // <AudioRecorder />
               <AudioRecorder onClose={() => setShowRecorder(false)} />
             ) : (
               <View style={styles.inputContainer}>
@@ -152,9 +153,9 @@ export default function NewReport() {
                   value={paragraphText}
                   onChangeText={setParagraphText}
                 />
-                <TouchableOpacity style={styles.micIcon}>
+                {/* <TouchableOpacity style={styles.micIcon} onPress={()=>setShowRecorder(true)}>
                   <Mic size={24} color="#007bff" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             )}
 
