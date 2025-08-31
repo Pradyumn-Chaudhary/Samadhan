@@ -1,11 +1,13 @@
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Camera, Mic } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import AudioRecorder from '../Components/AudioRecorder';
 import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  PermissionsAndroid,
   Platform,
   ScrollView,
   StyleSheet,
@@ -13,6 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import {
   CameraOptions,
@@ -20,12 +23,14 @@ import {
   MediaType,
 } from 'react-native-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { canStartRecording } from '../Services/audioService';
 
 export default function NewReport() {
   const navigation = useNavigation();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState();
   const [paragraphText, setParagraphText] = useState('');
+  const [showRecorder, setShowRecorder] = useState(false);
 
   const handleCameraPress = () => {
     openCamera();
@@ -38,7 +43,7 @@ export default function NewReport() {
       maxHeight: 2000,
       maxWidth: 2000,
       quality: 0.8,
-      // If want to save the captured Image into Storage
+      // To save the captured Image into Storage
       // saveToPhotos: true
     };
 
@@ -57,6 +62,19 @@ export default function NewReport() {
       console.log('Camera launch error: ', error);
       Alert.alert('Error', 'Failed to launch camera');
     }
+  };
+
+  const handleMicPress = () => {
+    openRecorder();
+  };
+
+  const openRecorder = async () => {
+    const canRecord = canStartRecording();
+    if (!canRecord) {
+      Alert.alert('Permission Required for Recording');
+      return;
+    }
+    setShowRecorder(true);
   };
 
   return (
@@ -122,19 +140,23 @@ export default function NewReport() {
             </View>
 
             {/* Text Input with Mic Icon */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter a short paragraph or context..."
-                multiline={true}
-                numberOfLines={4}
-                value={paragraphText}
-                onChangeText={setParagraphText}
-              />
-              <TouchableOpacity style={styles.micIcon}>
-                <Mic size={24} color="#007bff" />
-              </TouchableOpacity>
-            </View>
+            {showRecorder ? (
+              <AudioRecorder onClose={() => setShowRecorder(false)} />
+            ) : (
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter a short paragraph or context..."
+                  multiline={true}
+                  numberOfLines={4}
+                  value={paragraphText}
+                  onChangeText={setParagraphText}
+                />
+                <TouchableOpacity style={styles.micIcon}>
+                  <Mic size={24} color="#007bff" />
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Submit Button */}
             <TouchableOpacity style={styles.submitButton}>
