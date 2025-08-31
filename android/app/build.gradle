@@ -134,4 +134,7 @@ dependencies {
 
     // Add the specific Firebase products you want to use
     implementation 'com.google.firebase:firebase-auth'
+
+    // To ensure support for the backported AndroidX Photo Picker:
+    implementation("androidx.activity:activity:1.9.+")
 }
