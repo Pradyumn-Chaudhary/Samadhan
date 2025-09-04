@@ -2,11 +2,19 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView from 'react-native-maps';
-import { Bell, BellDot, TriangleAlert } from 'lucide-react-native';
+import {
+  Bell,
+  BellDot,
+  TriangleAlert,
+  Satellite,
+  LocateFixed,
+} from 'lucide-react-native';
 
 export default function HomeScreen({ navigation }: any) {
   const [haveNotification, setHaveNotification] = useState(true);
   const [open, setOpen] = useState(true);
+  const [mapType, setMapType] = useState<'standard' | 'hybrid'>('standard');
+
   return (
     <SafeAreaView style={styles.container}>
       {/*  Header */}
@@ -32,16 +40,46 @@ export default function HomeScreen({ navigation }: any) {
         </View>
       </View>
 
-      {/* main view */}
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: 26.27,
-          longitude: 73.04,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }}
-      />
+      <View style={styles.container}>
+        {/* The MapView takes up the full space of the container */}
+        <MapView
+          style={styles.map}
+          mapType={mapType}
+          initialRegion={{
+            latitude: 26.27,
+            longitude: 73.04,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          }}
+        />
+
+        {/* A container for all floating buttons on the top-right */}
+        <View style={styles.floatingButtonsContainer}>
+          {/* The Map Type Toggle Button */}
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor:
+                  mapType === 'standard' ? 'rgba(0,0,0,0.5)' : 'dodgerblue',
+              },
+            ]}
+            onPress={() =>
+              setMapType(mapType === 'standard' ? 'hybrid' : 'standard')
+            }
+          >
+            <Satellite
+              color={mapType === 'standard' ? 'white' : 'white'}
+              size={25}
+            />
+          </TouchableOpacity>
+
+          {/* The Locate Fixed Button */}
+          <TouchableOpacity style={styles.button}>
+            <LocateFixed color="white" size={25} />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Footer */}
       <View style={styles.footer}>
@@ -94,6 +132,24 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  floatingButtonsContainer: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    // Add margin between the buttons
+    gap: 10,
+    // Add a slight shadow for depth
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 50,
+    padding: 10,
   },
   footer: {
     flexDirection: 'row',
