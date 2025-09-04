@@ -56,8 +56,6 @@ export default function SignIn({ navigation }: any) {
       // Step 1: Attempt to get the user
       const response = await axios.get(`${baseUrl}/getUser`, {
         params: {
-          user_id: user.uid,
-          full_name: user.displayName,
           email: user.email,
         },
       });
@@ -76,7 +74,6 @@ export default function SignIn({ navigation }: any) {
         try {
           // Step 2: Create the new user with a POST request
           const createResponse = await axios.post(`${baseUrl}/createUser`, {
-            user_id: user.uid,
             full_name: user.displayName,
             email: user.email,
           });
