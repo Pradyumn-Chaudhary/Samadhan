@@ -11,7 +11,7 @@ export const NotificationCard = ({
 }: NotificationCardProp) => {
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.8}
       style={[styles.card, !isRead && styles.unreadCard]}
     >
       {/* Profile Picture / Icon */}
@@ -41,9 +41,7 @@ export const NotificationCard = ({
 
       {/* Unread Indicator */}
       {!isRead && (
-        <View style={styles.unreadDotContainer}>
-          <Dot size={18} color="#007bff" />
-        </View>
+        <Dot size={24} color="#007AFF" />
       )}
     </TouchableOpacity>
   );
@@ -54,56 +52,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginVertical: 6,
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginVertical: 1,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   unreadCard: {
-    backgroundColor: '#f0f7ff', // soft blue highlight for unread
+    backgroundColor: '#f7f9fc',
   },
   imageContainer: {
-    marginRight: 12,
+    marginRight: 16,
   },
   profileImage: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#e8e8e8',
   },
   defaultImagePlaceholder: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: '#e0e0e0',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#e8e8e8',
   },
   contentContainer: {
     flex: 1,
-    justifyContent: 'center',
   },
   notificationText: {
-    fontSize: 15,
-    color: '#444',
-    lineHeight: 20,
+    fontSize: 16,
+    color: '#333333',
+    lineHeight: 22,
+    marginBottom: 4,
   },
   unreadText: {
     fontWeight: '600',
-    color: '#222',
+    color: '#000000',
   },
   timestamp: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
-  },
-  unreadDotContainer: {
-    marginLeft: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 14,
+    color: '#666666',
   },
 });

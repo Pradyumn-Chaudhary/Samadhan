@@ -17,10 +17,10 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/*  Header */}
+      {/*  Header */}
       <View style={styles.header}>
         {/* right side */}
-        <TouchableOpacity onPress={() => navigation.navigate('MyReport')}>
+        <TouchableOpacity onPress={() => navigation.navigate('MyReport')} style={styles.reportButton}>
           <Text style={styles.headerText}>My Report</Text>
         </TouchableOpacity>
         {/* left side */}
@@ -29,13 +29,20 @@ export default function HomeScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Notification')}
             style={styles.iconContainer}
           >
-            {haveNotification ? <BellDot color="red" /> : <Bell color="#000" />}
+            {haveNotification ? (
+              <View style={styles.notificationWrapper}>
+                <BellDot color="#ff6b6b" size={24} />
+                <View style={styles.notificationBadge} />
+              </View>
+            ) : (
+              <Bell color="#4a5568" size={24} />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate('NewReport')}
-            style={styles.iconContainer}
+            style={[styles.iconContainer, styles.alertIconContainer]}
           >
-            <TriangleAlert color="#000" />
+            <TriangleAlert color="#ff8c42" size={24} />
           </TouchableOpacity>
         </View>
       </View>
@@ -61,7 +68,7 @@ export default function HomeScreen({ navigation }: any) {
               styles.button,
               {
                 backgroundColor:
-                  mapType === 'standard' ? 'rgba(0,0,0,0.5)' : 'dodgerblue',
+                  mapType === 'standard' ? 'rgba(74, 85, 104, 0.9)' : '#4299e1',
               },
             ]}
             onPress={() =>
@@ -70,37 +77,47 @@ export default function HomeScreen({ navigation }: any) {
           >
             <Satellite
               color={mapType === 'standard' ? 'white' : 'white'}
-              size={25}
+              size={22}
             />
           </TouchableOpacity>
 
           {/* The Locate Fixed Button */}
           <TouchableOpacity style={styles.button}>
-            <LocateFixed color="white" size={25} />
+            <LocateFixed color="white" size={22} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          onPress={() => setOpen(true)}
-          style={[
-            styles.footerButton,
-            { backgroundColor: open ? 'green' : '#000' },
-          ]}
-        >
-          <Text style={styles.footerButtonText}>Open Issues</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setOpen(false)}
-          style={[
-            styles.footerButton,
-            { backgroundColor: !open ? 'green' : '#000' },
-          ]}
-        >
-          <Text style={styles.footerButtonText}>Closed Issues</Text>
-        </TouchableOpacity>
+        <View style={styles.footerContainer}>
+          <TouchableOpacity
+            onPress={() => setOpen(true)}
+            style={[
+              styles.footerButton,
+              styles.footerButtonLeft,
+              { backgroundColor: open ? '#48bb78' : '#e2e8f0' },
+            ]}
+          >
+            <Text style={[
+              styles.footerButtonText,
+              { color: open ? 'white' : '#4a5568' }
+            ]}>Open Issues</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setOpen(false)}
+            style={[
+              styles.footerButton,
+              styles.footerButtonRight,
+              { backgroundColor: !open ? '#48bb78' : '#e2e8f0' },
+            ]}
+          >
+            <Text style={[
+              styles.footerButtonText,
+              { color: !open ? 'white' : '#4a5568' }
+            ]}>Closed Issues</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -114,21 +131,66 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  reportButton: {
+    backgroundColor: '#667eea',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
   },
   headerIcons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   iconContainer: {
-    marginLeft: 15,
+    marginLeft: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f7fafc',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  alertIconContainer: {
+    backgroundColor: '#fff5f5',
+  },
+  notificationWrapper: {
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    backgroundColor: '#e53e3e',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'white',
   },
   map: {
     flex: 1,
@@ -137,36 +199,64 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     right: 20,
-    // Add margin between the buttons
-    gap: 10,
-    // Add a slight shadow for depth
+    gap: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 8,
   },
   button: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 50,
-    padding: 10,
+    backgroundColor: 'rgba(74, 85, 104, 0.9)',
+    borderRadius: 28,
+    padding: 14,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // backdropFilter: 'blur(10px)',
   },
   footer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  footerContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 15,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 30,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   footerButton: {
-    paddingVertical: 10,
+    flex: 1,
+    paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerButtonLeft: {
+    borderTopLeftRadius: 26,
+    borderBottomLeftRadius: 26,
+    marginRight: 2,
+  },
+  footerButtonRight: {
+    borderTopRightRadius: 26,
+    borderBottomRightRadius: 26,
+    marginLeft: 2,
   },
   footerButtonText: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
   },
 });
