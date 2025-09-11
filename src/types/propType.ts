@@ -11,3 +11,11 @@ export type ReportCardProp = {
   timestamp: string;
   status: string;
 };
+
+export type ReportType = {
+  report_id: string;
+  photo_url: string;
+  description: string;
+  status: string;
+  reported_at: string;
+};

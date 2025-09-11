@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, Filter, Search } from 'lucide-react-native';
-import React from 'react';
+import { ArrowLeft, Filter, ArrowUpDown } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
 import {
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,43 +10,41 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReportCard } from '../Components/ReportCard';
+import axios from 'axios';
+import { BACKEND_URL } from '@env';
+import { ReportType } from '../types/propType';
+
+const FILTER_OPTIONS = [
+  { label: 'All', value: null },
+  { label: 'Submitted', value: 'Submitted' },
+  { label: 'Acknowledged', value: 'Acknowledged' },
+  { label: 'Assigned', value: 'Assigned' },
+  { label: 'Resolved', value: 'Resolved' },
+];
 
 export default function MyReport() {
   const navigation = useNavigation();
+  const [reports, setReports] = useState<ReportType[]>([]);
+  const [sort, setSort] = useState('asc');
+  const [filter, setFilter] = useState(null);
 
-  const reports = [
-    {
-      id: 1,
-      image:
-        'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
-      context: 'Pothole on the main road near the city center.',
-      status: 'In Progress',
-      timestamp: '2 hours ago',
-    },
-    {
-      id: 2,
-      image:
-        'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
-      context: 'Garbage not collected for three days in the residential area.',
-      status: 'Completed',
-      timestamp: 'Yesterday',
-    },
-    {
-      id: 3,
-      image:
-        'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
-      context: 'Power outage in our block since morning.',
-      status: 'Pending',
-      timestamp: '1 day ago',
-    },
-  ];
-
-  const getStatusCount = (status:any) => {
-    return reports.filter(report => 
-      report.status.toLowerCase() === status.toLowerCase()
-    ).length;
+  const fetchReport = async () => {
+    const response = await axios.get(`${BACKEND_URL}/users/getReport`, {
+      params: {
+        user_id: '681c81eb-6639-49a8-9efe-54ebb6b1c20f',
+        status: filter,
+        sort: sort,
+        // page,
+        // limit,
+      },
+    });
+    setReports(response.data);
   };
 
+  useEffect(() => {
+    fetchReport();
+  }, [filter, sort]);
+  
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -61,7 +59,7 @@ export default function MyReport() {
           <Text style={styles.headerTitle}>My Reports</Text>
           <View style={styles.headerActions}>
             <TouchableOpacity style={styles.actionButton}>
-              <Search size={20} color="#667eea" />
+              <ArrowUpDown size={20} color="#667eea" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
               <Filter size={20} color="#667eea" />
@@ -89,36 +87,34 @@ export default function MyReport() {
       </View> */}
 
       {/* Report List */}
-      <ScrollView 
+      <FlatList
+        data={reports}
+        keyExtractor={item => item.report_id.toString()}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.reportsSection}>
-          {/* <Text style={styles.sectionTitle}>Recent Reports</Text> */}
-          {reports.map(report => (
-            <ReportCard
-              key={report.id}
-              image={report.image}
-              context={report.context}
-              status={report.status}
-              timestamp={report.timestamp}
-            />
-          ))}
-        </View>
-
-        {/* Empty State */}
-        {reports.length === 0 && (
+        renderItem={({ item }) => (
+          <ReportCard
+            image={item.photo_url}
+            context={item.description}
+            status={item.status}
+            timestamp={item.reported_at}
+          />
+        )}
+        ListEmptyComponent={
           <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.emptyIcon}
+            >
               <ArrowLeft size={48} color="#cbd5e1" />
-            </View>
+            </TouchableOpacity>
             <Text style={styles.emptyTitle}>No Reports Yet</Text>
             <Text style={styles.emptySubtitle}>
               Your submitted reports will appear here
             </Text>
           </View>
-        )}
-      </ScrollView>
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -161,7 +157,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1e293b',
     flex: 1,
-    textAlign: 'center',
     marginHorizontal: 16,
   },
   headerActions: {

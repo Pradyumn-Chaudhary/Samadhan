@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2d3748',
     flex: 1,
-    textAlign: 'center',
+    // textAlign: 'center',
     marginHorizontal: 16,
   },
   headerSpacer: {
