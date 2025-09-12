@@ -119,7 +119,7 @@ export default function NewReport({ navigation }: any) {
       const baseUrl = `${BACKEND_URL}/users/createReport`;
       const createReport = await axios.post(`${baseUrl}`, {
         //TODO
-        user_id: "681c81eb-6639-49a8-9efe-54ebb6b1c20f",
+        user_id: user.user_id,
         photo_url: photoUrl,
         category: selectedCategory,
         // Hardcoded Jodhpur location as requested for testing

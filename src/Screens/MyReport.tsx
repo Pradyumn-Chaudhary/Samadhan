@@ -14,6 +14,7 @@ import { ReportCard } from '../Components/ReportCard';
 import axios from 'axios';
 import { BACKEND_URL } from '@env';
 import { ReportType } from '../types/propType';
+import { useUser } from '../context/UserContext';
 
 const FILTER_OPTIONS = [
   { label: 'All', value: null },
@@ -33,6 +34,7 @@ export default function MyReport() {
   const [reports, setReports] = useState<ReportType[]>([]);
   const [sort, setSort] = useState('desc'); // Default to newest first
   const [filter, setFilter] = useState<string | null>(null);
+  const { user } = useUser();
 
   // State and animation for Filter panel
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -93,7 +95,7 @@ export default function MyReport() {
   const fetchReport = async () => {
     const response = await axios.get(`${BACKEND_URL}/users/getReport`, {
       params: {
-        user_id: '681c81eb-6639-49a8-9efe-54ebb6b1c20f',
+        user_id: user.user_id,
         status: filter,
         sort: sort,
       },
