@@ -41,16 +41,18 @@ export default function NewReport({ navigation }: any) {
   const requestStoragePermission = async () => {
     if (Platform.OS === 'android') {
       try {
-        const granted = await PermissionsAndroid.request(
-          // Important: For newer Android versions, this permission might not be sufficient
-          // or required depending on your target SDK. This is a common starting point.
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title: 'Storage Permission Required',
-            message: 'This app needs access to your storage to upload photos.',
-            buttonPositive: 'OK',
-          },
-        );
+
+        const permission =
+        Platform.Version >= 33
+          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES // Android 13+ (API 33)
+            : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE; // Android 12 and below
+        
+            const granted = await PermissionsAndroid.request(permission, {
+              title: 'Storage Permission Required',
+              message: 'This app needs access to your storage to upload photos.',
+              buttonPositive: 'OK',
+            });
+      
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
         console.warn('Permission request error:', err);
