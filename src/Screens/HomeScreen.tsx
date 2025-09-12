@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView from 'react-native-maps';
 import {
@@ -9,18 +9,65 @@ import {
   Satellite,
   LocateFixed,
 } from 'lucide-react-native';
+import { useUser } from '../context/UserContext';
+import auth from '@react-native-firebase/auth'; // Correct import for React Native Firebase
+import axios from 'axios';
+import { BACKEND_URL } from '@env'; // Ensure you have this environment variable
 
 export default function HomeScreen({ navigation }: any) {
   const [haveNotification, setHaveNotification] = useState(true);
   const [open, setOpen] = useState(true);
   const [mapType, setMapType] = useState<'standard' | 'hybrid'>('standard');
+  const { user, setUser } = useUser();
+
+  useEffect(() => {
+    // Correctly subscribe to auth changes using the React Native Firebase library
+    const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
+      if (currentUser && currentUser.email) {
+        // If a user is logged in and their email exists, fetch details
+        if (user.user_id) return; // a user is already set in the context, do nothing
+
+        try {
+          const response = await axios.get(`${BACKEND_URL}/users/getUser`, {
+            params: { email: currentUser.email },
+          });
+          
+          const userData = response.data;
+          
+          // Set the user in the global context
+          setUser({
+            user_id: userData.user_id,
+            full_name: userData.full_name,
+            email: currentUser.email,
+          });
+
+        } catch (error) {
+          console.error("Failed to fetch user data from backend:", error);
+          // Handle error, maybe navigate to a login screen or show a message
+        }
+      } else {
+        // No user is signed in, clear the context
+        setUser({
+          user_id: null,
+          full_name: null,
+          email: null,
+        });
+      }
+    });
+    console.log(user)
+    // Cleanup subscription on component unmount
+    return unsubscribe; // The returned function from onAuthStateChanged is the unsubscriber
+  }, [user.user_id]); // Rerun effect if the user_id changes
 
   return (
     <SafeAreaView style={styles.container}>
-      {/*  Header */}
+      {/* Header */}
       <View style={styles.header}>
         {/* right side */}
-        <TouchableOpacity onPress={() => navigation.navigate('MyReport')} style={styles.reportButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('MyReport')}
+          style={styles.reportButton}
+        >
           <Text style={styles.headerText}>My Report</Text>
         </TouchableOpacity>
         {/* left side */}
@@ -99,10 +146,14 @@ export default function HomeScreen({ navigation }: any) {
               { backgroundColor: open ? '#48bb78' : '#e2e8f0' },
             ]}
           >
-            <Text style={[
-              styles.footerButtonText,
-              { color: open ? 'white' : '#4a5568' }
-            ]}>Open Issues</Text>
+            <Text
+              style={[
+                styles.footerButtonText,
+                { color: open ? 'white' : '#4a5568' },
+              ]}
+            >
+              Open Issues
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setOpen(false)}
@@ -112,10 +163,14 @@ export default function HomeScreen({ navigation }: any) {
               { backgroundColor: !open ? '#48bb78' : '#e2e8f0' },
             ]}
           >
-            <Text style={[
-              styles.footerButtonText,
-              { color: !open ? 'white' : '#4a5568' }
-            ]}>Closed Issues</Text>
+            <Text
+              style={[
+                styles.footerButtonText,
+                { color: !open ? 'white' : '#4a5568' },
+              ]}
+            >
+              Closed Issues
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -197,7 +252,7 @@ const styles = StyleSheet.create({
   },
   floatingButtonsContainer: {
     position: 'absolute',
-    top: 50,
+    top: 20,
     right: 20,
     gap: 12,
     shadowColor: '#000',
@@ -214,7 +269,6 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    // backdropFilter: 'blur(10px)',
   },
   footer: {
     paddingHorizontal: 20,
