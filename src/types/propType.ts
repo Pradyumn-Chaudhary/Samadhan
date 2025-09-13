@@ -34,9 +34,8 @@ export type LocationType = {
 };
 
 export type IssueType = {
-  issue_id: number;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   category: string;
   priority: number;
 };

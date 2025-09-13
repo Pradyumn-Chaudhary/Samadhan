@@ -6,10 +6,12 @@ import {
   ActivityIndicator,
   PermissionsAndroid,
   Platform,
+  Image,
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView from 'react-native-maps';
+import MapView from 'react-native-map-clustering';
+import { Marker } from 'react-native-maps';
 import {
   Bell,
   BellDot,
@@ -23,7 +25,10 @@ import axios from 'axios';
 import { BACKEND_URL } from '@env';
 import { UserType } from '../types/propType';
 import Geolocation from '@react-native-community/geolocation';
-import { LocationType } from '../types/propType';
+import { LocationType, IssueType } from '../types/propType';
+import { parsePoint } from '../utils/parsePoint';
+import { debounce } from 'lodash';
+import { getPinColor } from '../utils/getPinColor';
 
 export default function HomeScreen({ navigation }: any) {
   const [haveNotification, setHaveNotification] = useState(true);
@@ -31,7 +36,12 @@ export default function HomeScreen({ navigation }: any) {
   const [mapType, setMapType] = useState<'standard' | 'hybrid'>('standard');
   const { user, setUser } = useUser();
   const mapRef = useRef<MapView>(null);
-  const [location, setLocation] = useState<LocationType>({latitude: 27.22069 , longitude: 77.49547});
+  const [location, setLocation] = useState<LocationType>({
+    latitude: 27.22069,
+    longitude: 77.49547,
+  });
+  const [Issues, setIssues] = useState<IssueType[]>([]);
+  const [region, setRegion] = useState<any | null>(null);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -68,7 +78,7 @@ export default function HomeScreen({ navigation }: any) {
       Geolocation.getCurrentPosition(
         position => {
           const { latitude, longitude } = position.coords;
-          setLocation({latitude, longitude});
+          setLocation({ latitude, longitude });
           console.log(
             'User Context updated with location:',
             latitude,
@@ -121,6 +131,64 @@ export default function HomeScreen({ navigation }: any) {
     return unsubscribe;
   }, [user.user_id]);
 
+  const fetchIssues = async ({
+    north,
+    south,
+    east,
+    west,
+  }: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/map/issues`, {
+        params: {
+          south,
+          west,
+          north,
+          east,
+          status: open ? 'open' : 'closed',
+        },
+      });
+
+      const parsedIssues = response.data.map((issue: any) => {
+        const coords = parsePoint(issue.location);
+        return {
+          ...issue,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude,
+        };
+      });
+
+      setIssues(parsedIssues);
+      console.log(parsedIssues);
+    } catch (error) {
+      console.error('Error fetching issues:', error);
+    }
+  };
+
+  const debouncedFetch = debounce((region: any) => {
+    setRegion(region);
+    const { latitude, longitude, latitudeDelta, longitudeDelta } = region;
+    const north = latitude + latitudeDelta / 2;
+    const south = latitude - latitudeDelta / 2;
+    const east = longitude + longitudeDelta / 2;
+    const west = longitude - longitudeDelta / 2;
+    fetchIssues({ north, south, east, west });
+  }, 500);
+
+  useEffect(() => {
+    if (!region) return;
+    const { latitude, longitude, latitudeDelta, longitudeDelta } = region;
+    const north = latitude + latitudeDelta / 2;
+    const south = latitude - latitudeDelta / 2;
+    const east = longitude + longitudeDelta / 2;
+    const west = longitude - longitudeDelta / 2;
+    fetchIssues({ north, south, east, west }); // immediate fetch, no debounce
+  }, [open]);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -157,17 +225,36 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.container}>
         {/* Check if we have valid coordinates before rendering the map */}
         <MapView
-          ref={mapRef}
           style={styles.map}
-          mapType={mapType}
           region={{
             latitude: location.latitude,
             longitude: location.longitude,
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           }}
+          onRegionChangeComplete={debouncedFetch}
           showsUserLocation={true}
-        />
+        >
+          {Issues.map((issue, index) => {
+            if (!issue.latitude || !issue.longitude) return null; // safety check
+
+            const key = `${index}-${issue.latitude}-${issue.longitude}-${issue.category}`;
+
+            return (
+              <Marker
+                key={key}
+                coordinate={{
+                  latitude: issue.latitude,
+                  longitude: issue.longitude,
+                }}
+                title={issue.category}
+                description={`Priority: ${issue.priority}`}
+                pinColor={getPinColor(issue.category)}
+              ></Marker>
+            );
+          })}
+        </MapView>
+
         <View style={styles.floatingButtonsContainer}>
           <TouchableOpacity
             style={[
@@ -378,5 +465,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#4a5568',
+  },
+  markerImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20, // Example: make it a circle
+    borderWidth: 2,
+    borderColor: 'white',
   },
 });
