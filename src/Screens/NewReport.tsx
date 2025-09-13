@@ -138,7 +138,7 @@ export default function NewReport({ navigation }: any) {
       Geolocation.getCurrentPosition(
         position => resolve(position.coords),
         error => reject(error),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 },
       );
     });
   };

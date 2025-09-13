@@ -27,3 +27,16 @@ export type UserType = {
   latitude: number | null;
   longitude: number | null;
 };
+
+export type LocationType = {
+  latitude: number;
+  longitude: number;
+};
+
+export type IssueType = {
+  issue_id: number;
+  latitude: number;
+  longitude: number;
+  category: string;
+  priority: number;
+};

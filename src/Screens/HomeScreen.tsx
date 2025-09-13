@@ -5,7 +5,7 @@ import {
   View,
   ActivityIndicator,
   PermissionsAndroid,
-  Platform
+  Platform,
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +23,7 @@ import axios from 'axios';
 import { BACKEND_URL } from '@env';
 import { UserType } from '../types/propType';
 import Geolocation from '@react-native-community/geolocation';
+import { LocationType } from '../types/propType';
 
 export default function HomeScreen({ navigation }: any) {
   const [haveNotification, setHaveNotification] = useState(true);
@@ -30,6 +31,7 @@ export default function HomeScreen({ navigation }: any) {
   const [mapType, setMapType] = useState<'standard' | 'hybrid'>('standard');
   const { user, setUser } = useUser();
   const mapRef = useRef<MapView>(null);
+  const [location, setLocation] = useState<LocationType>({latitude: 27.22069 , longitude: 77.49547});
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -66,11 +68,7 @@ export default function HomeScreen({ navigation }: any) {
       Geolocation.getCurrentPosition(
         position => {
           const { latitude, longitude } = position.coords;
-          setUser((prevUser: UserType) => ({
-            ...prevUser,
-            latitude,
-            longitude,
-          }));
+          setLocation({latitude, longitude});
           console.log(
             'User Context updated with location:',
             latitude,
@@ -81,7 +79,7 @@ export default function HomeScreen({ navigation }: any) {
           // See error codes and messages in the library's documentation
           console.log(error.code, error.message);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 },
       );
     };
 
@@ -123,20 +121,6 @@ export default function HomeScreen({ navigation }: any) {
     return unsubscribe;
   }, [user.user_id]);
 
-  const centerOnUser = () => {
-    // Check if the mapRef and user location are available
-    if (mapRef.current && user.latitude && user.longitude) {
-      const newRegion = {
-        latitude: user.latitude,
-        longitude: user.longitude,
-        latitudeDelta: 0.005, // You can adjust the zoom level here
-        longitudeDelta: 0.005,
-      };
-      // Animate the map to the new region
-      mapRef.current.animateToRegion(newRegion, 1000); // 1000ms (1 second) animation
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -172,51 +156,38 @@ export default function HomeScreen({ navigation }: any) {
 
       <View style={styles.container}>
         {/* Check if we have valid coordinates before rendering the map */}
-        {user.latitude && user.longitude ? (
-          <>
-            <MapView
-              ref={mapRef}
-              style={styles.map}
-              mapType={mapType}
-              region={{
-                latitude: user.latitude,
-                longitude: user.longitude,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
-              }}
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          mapType={mapType}
+          region={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          }}
+          showsUserLocation={true}
+        />
+        <View style={styles.floatingButtonsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor: mapType === 'standard' ? 'white' : '#4299e1',
+              },
+            ]}
+            onPress={() =>
+              setMapType(mapType === 'standard' ? 'hybrid' : 'standard')
+            }
+          >
+            <Satellite
+              color={
+                mapType === 'standard' ? 'rgba(74, 85, 104, 0.9)' : 'white'
+              }
+              size={22}
             />
-            <View style={styles.floatingButtonsContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor:
-                      mapType === 'standard'
-                        ? 'rgba(74, 85, 104, 0.9)'
-                        : '#4299e1',
-                  },
-                ]}
-                onPress={() =>
-                  setMapType(mapType === 'standard' ? 'hybrid' : 'standard')
-                }
-              >
-                <Satellite
-                  color={mapType === 'standard' ? 'white' : 'white'}
-                  size={22}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={centerOnUser}>
-                <LocateFixed color="white" size={22} />
-              </TouchableOpacity>
-            </View>
-          </>
-        ) : (
-          // If we don't have coordinates yet, show a loading spinner
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#667eea" />
-            <Text style={styles.loadingText}>Fetching your location...</Text>
-          </View>
-        )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Footer */}
@@ -336,8 +307,8 @@ const styles = StyleSheet.create({
   },
   floatingButtonsContainer: {
     position: 'absolute',
-    top: 20,
-    right: 20,
+    top: 55,
+    right: 12,
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -346,11 +317,10 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   button: {
-    backgroundColor: 'rgba(74, 85, 104, 0.9)',
-    borderRadius: 28,
-    padding: 14,
-    width: 56,
-    height: 56,
+    padding: 4,
+    borderRadius: 2,
+    width: 38,
+    height: 38,
     justifyContent: 'center',
     alignItems: 'center',
   },
