@@ -9,6 +9,8 @@ export const UserProvider = ({ children }) => {
     user_id: null,
     full_name: null,
     email: null,
+    latitude: null,
+    longitude: null,
   });
 
   return (

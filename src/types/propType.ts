@@ -19,3 +19,11 @@ export type ReportType = {
   status: string;
   reported_at: string;
 };
+
+export type UserType = {
+  user_id: string | null;
+  full_name: string | null;
+  email: string | null;
+  latitude: number | null;
+  longitude: number | null;
+};

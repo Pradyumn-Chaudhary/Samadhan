@@ -29,6 +29,7 @@ import { uploadMedia } from '../Services/uploadMedia';
 import { canStartRecording } from '../Services/audioService';
 import { BACKEND_URL } from '@env';
 import axios from 'axios';
+import Geolocation from '@react-native-community/geolocation';
 
 export default function NewReport({ navigation }: any) {
   const [imageAsset, setImageAsset] = useState<Asset | null>(null);
@@ -36,23 +37,25 @@ export default function NewReport({ navigation }: any) {
   const [paragraphText, setParagraphText] = useState('');
   const [showRecorder, setShowRecorder] = useState(false);
   const [submitting, setsubmitting] = useState(false);
+
   const { user } = useUser();
+  const [currentLatitude, setCurrentLatitude] = useState(user.latitude);
+  const [currentLongitude, setCurrentLongitude] = useState(user.longitude);
 
   const requestStoragePermission = async () => {
     if (Platform.OS === 'android') {
       try {
-
         const permission =
-        Platform.Version >= 33
-          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES // Android 13+ (API 33)
+          Platform.Version >= 33
+            ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES // Android 13+ (API 33)
             : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE; // Android 12 and below
-        
-            const granted = await PermissionsAndroid.request(permission, {
-              title: 'Storage Permission Required',
-              message: 'This app needs access to your storage to upload photos.',
-              buttonPositive: 'OK',
-            });
-      
+
+        const granted = await PermissionsAndroid.request(permission, {
+          title: 'Storage Permission Required',
+          message: 'This app needs access to your storage to upload photos.',
+          buttonPositive: 'OK',
+        });
+
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
         console.warn('Permission request error:', err);
@@ -104,6 +107,42 @@ export default function NewReport({ navigation }: any) {
     }
   };
 
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Location Permission',
+            message: 'We need your location to create the report.',
+            buttonPositive: 'OK',
+            buttonNegative: 'Cancel',
+          },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn('Location permission error:', err);
+        return false;
+      }
+    }
+    // iOS permission is handled automatically on first use
+    return true;
+  };
+
+  // --- ADD THIS FUNCTION TO FETCH LOCATION USING A PROMISE ---
+  const getCurrentLocation = (): Promise<{
+    latitude: number;
+    longitude: number;
+  }> => {
+    return new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        position => resolve(position.coords),
+        error => reject(error),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+      );
+    });
+  };
+
   const handleSubmit = async () => {
     if (!imageAsset || !selectedCategory) {
       Alert.alert('Image and Category Required');
@@ -111,6 +150,12 @@ export default function NewReport({ navigation }: any) {
     }
     setsubmitting(true);
     try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        throw new Error('Location permission denied.');
+      }
+      const location = await getCurrentLocation();
+
       const photoUrl = await uploadMedia({
         mediaUri: imageAsset.uri!,
         mediaMimeType: imageAsset.type!,
@@ -122,9 +167,8 @@ export default function NewReport({ navigation }: any) {
         user_id: user.user_id,
         photo_url: photoUrl,
         category: selectedCategory,
-        // Hardcoded Jodhpur location as requested for testing
-        longitude: 26.2389,
-        latitude: 73.0243,
+        latitude: location.latitude,
+        longitude: location.longitude,
         description: paragraphText,
         audio_url: '',
       });

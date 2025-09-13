@@ -1,5 +1,13 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  PermissionsAndroid,
+  Platform
+} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView from 'react-native-maps';
 import {
@@ -10,67 +18,135 @@ import {
   LocateFixed,
 } from 'lucide-react-native';
 import { useUser } from '../context/UserContext';
-import auth from '@react-native-firebase/auth'; // Correct import for React Native Firebase
+import auth from '@react-native-firebase/auth';
 import axios from 'axios';
-import { BACKEND_URL } from '@env'; // Ensure you have this environment variable
+import { BACKEND_URL } from '@env';
+import { UserType } from '../types/propType';
+import Geolocation from '@react-native-community/geolocation';
 
 export default function HomeScreen({ navigation }: any) {
   const [haveNotification, setHaveNotification] = useState(true);
   const [open, setOpen] = useState(true);
   const [mapType, setMapType] = useState<'standard' | 'hybrid'>('standard');
   const { user, setUser } = useUser();
+  const mapRef = useRef<MapView>(null);
 
   useEffect(() => {
-    // Correctly subscribe to auth changes using the React Native Firebase library
-    const unsubscribe = auth().onAuthStateChanged(async (currentUser) => {
+    const requestLocationPermission = async () => {
+      // --- Android Permission Handling ---
+      if (Platform.OS === 'android') {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: 'Location Permission',
+              message: 'We use your location to show you on the map',
+              buttonPositive: 'OK',
+              buttonNegative: 'Cancel',
+            },
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('Location permission granted');
+            getLocation();
+          } else {
+            console.log('Location permission denied.');
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      } else {
+        // --- iOS Permission Handling ---
+        // On iOS, the permission request is triggered automatically when you call Geolocation.getCurrentPosition().
+        // You just need to ensure the necessary keys are in your Info.plist.
+        getLocation();
+      }
+    };
+
+    const getLocation = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          const { latitude, longitude } = position.coords;
+          setUser((prevUser: UserType) => ({
+            ...prevUser,
+            latitude,
+            longitude,
+          }));
+          console.log(
+            'User Context updated with location:',
+            latitude,
+            longitude,
+          );
+        },
+        error => {
+          // See error codes and messages in the library's documentation
+          console.log(error.code, error.message);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+      );
+    };
+
+    requestLocationPermission();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(async currentUser => {
       if (currentUser && currentUser.email) {
-        // If a user is logged in and their email exists, fetch details
-        if (user.user_id) return; // a user is already set in the context, do nothing
+        if (user.user_id) return;
 
         try {
           const response = await axios.get(`${BACKEND_URL}/users/getUser`, {
             params: { email: currentUser.email },
           });
-          
           const userData = response.data;
-          
-          // Set the user in the global context
-          setUser({
+
+          setUser((prevUser: UserType) => ({
+            ...prevUser, // Keep existing data (like location)
             user_id: userData.user_id,
             full_name: userData.full_name,
             email: currentUser.email,
-          });
-
+          }));
         } catch (error) {
-          console.error("Failed to fetch user data from backend:", error);
-          // Handle error, maybe navigate to a login screen or show a message
+          console.error('Failed to fetch user data from backend:', error);
         }
       } else {
-        // No user is signed in, clear the context
-        setUser({
+        // ✅ CORRECTED LOGIC HERE
+        // No user is signed in, clear ONLY the user-specific fields
+        setUser((prevUser: UserType) => ({
+          ...prevUser, // Keep existing latitude and longitude
           user_id: null,
           full_name: null,
           email: null,
-        });
+        }));
       }
     });
-    console.log(user)
-    // Cleanup subscription on component unmount
-    return unsubscribe; // The returned function from onAuthStateChanged is the unsubscriber
-  }, [user.user_id]); // Rerun effect if the user_id changes
+
+    return unsubscribe;
+  }, [user.user_id]);
+
+  const centerOnUser = () => {
+    // Check if the mapRef and user location are available
+    if (mapRef.current && user.latitude && user.longitude) {
+      const newRegion = {
+        latitude: user.latitude,
+        longitude: user.longitude,
+        latitudeDelta: 0.005, // You can adjust the zoom level here
+        longitudeDelta: 0.005,
+      };
+      // Animate the map to the new region
+      mapRef.current.animateToRegion(newRegion, 1000); // 1000ms (1 second) animation
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        {/* right side */}
         <TouchableOpacity
           onPress={() => navigation.navigate('MyReport')}
           style={styles.reportButton}
         >
           <Text style={styles.headerText}>My Report</Text>
         </TouchableOpacity>
-        {/* left side */}
         <View style={styles.headerIcons}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Notification')}
@@ -95,44 +171,52 @@ export default function HomeScreen({ navigation }: any) {
       </View>
 
       <View style={styles.container}>
-        {/* The MapView takes up the full space of the container */}
-        <MapView
-          style={styles.map}
-          mapType={mapType}
-          initialRegion={{
-            latitude: 26.27,
-            longitude: 73.04,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          }}
-        />
-
-        {/* A container for all floating buttons on the top-right */}
-        <View style={styles.floatingButtonsContainer}>
-          {/* The Map Type Toggle Button */}
-          <TouchableOpacity
-            style={[
-              styles.button,
-              {
-                backgroundColor:
-                  mapType === 'standard' ? 'rgba(74, 85, 104, 0.9)' : '#4299e1',
-              },
-            ]}
-            onPress={() =>
-              setMapType(mapType === 'standard' ? 'hybrid' : 'standard')
-            }
-          >
-            <Satellite
-              color={mapType === 'standard' ? 'white' : 'white'}
-              size={22}
+        {/* Check if we have valid coordinates before rendering the map */}
+        {user.latitude && user.longitude ? (
+          <>
+            <MapView
+              ref={mapRef}
+              style={styles.map}
+              mapType={mapType}
+              region={{
+                latitude: user.latitude,
+                longitude: user.longitude,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
+              }}
             />
-          </TouchableOpacity>
-
-          {/* The Locate Fixed Button */}
-          <TouchableOpacity style={styles.button}>
-            <LocateFixed color="white" size={22} />
-          </TouchableOpacity>
-        </View>
+            <View style={styles.floatingButtonsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor:
+                      mapType === 'standard'
+                        ? 'rgba(74, 85, 104, 0.9)'
+                        : '#4299e1',
+                  },
+                ]}
+                onPress={() =>
+                  setMapType(mapType === 'standard' ? 'hybrid' : 'standard')
+                }
+              >
+                <Satellite
+                  color={mapType === 'standard' ? 'white' : 'white'}
+                  size={22}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={centerOnUser}>
+                <LocateFixed color="white" size={22} />
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          // If we don't have coordinates yet, show a loading spinner
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#667eea" />
+            <Text style={styles.loadingText}>Fetching your location...</Text>
+          </View>
+        )}
       </View>
 
       {/* Footer */}
@@ -312,5 +396,17 @@ const styles = StyleSheet.create({
   footerButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  // Added styles for the loading indicator
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f7fafc',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#4a5568',
   },
 });
