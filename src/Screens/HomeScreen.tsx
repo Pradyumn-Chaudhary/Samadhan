@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView from 'react-native-map-clustering';
-import { Marker } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { Bell, BellDot, TriangleAlert, Satellite } from 'lucide-react-native';
 import { useUser } from '../context/UserContext';
 import auth from '@react-native-firebase/auth';
@@ -22,6 +21,7 @@ import Geolocation from '@react-native-community/geolocation';
 import { LocationType, IssueType } from '../types/propType';
 import { parsePoint } from '../utils/parsePoint';
 import { debounce } from 'lodash';
+import { getIcon } from '../utils/getIcon';
 import { getPinColor } from '../utils/getPinColor';
 
 export default function HomeScreen({ navigation }: any) {
@@ -246,8 +246,20 @@ export default function HomeScreen({ navigation }: any) {
                 }}
                 title={issue.category}
                 description={`Priority: ${issue.priority}`}
-                pinColor={getPinColor(issue.category)}
-              ></Marker>
+                anchor={{ x: 0.5, y: 0.5 }}
+                centerOffset={{ x: 0.5, y: 0.5 }}
+              >
+                <View
+                  style={[
+                    styles.customMarker,
+                    { borderColor: getPinColor(issue.category) },
+                  ]}
+                >
+                  <Text style={styles.markerText}>
+                    {getIcon(issue.category)}
+                  </Text>
+                </View>
+              </Marker>
             );
           })}
         </MapView>
@@ -451,23 +463,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  // Added styles for the loading indicator
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f7fafc',
+  customMarker: {
+    backgroundColor: '#FFFFFF',
+    padding: 5, // Reduced from 8 to 5
+    borderRadius: 50,
+    borderWidth: 2, // Kept the border thin for clarity
+
+    // Shadow for iOS
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1, // Reduced shadow offset for a tighter look
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+
+    // Elevation for Android
+    elevation: 3,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#4a5568',
-  },
-  markerImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20, // Example: make it a circle
-    borderWidth: 2,
-    borderColor: 'white',
+  markerText: {
+    fontSize: 18,
+    textAlign: 'center',
   },
 });
