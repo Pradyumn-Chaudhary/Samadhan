@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, CheckCheck } from 'lucide-react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,35 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationCard } from '../Components/NotificationCard';
+import { NotificationCardProp } from '../types/propType';
 
 export default function Notification() {
   const navigation = useNavigation();
-  const notifications = [
-    {
-      id: 1,
-      image:
-        'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
-      notificationText: 'Jane Smith commented on your photo: "Looks amazing!"',
-      timestamp: '2h',
-      isRead: false,
-    },
-    {
-      id: 2,
-      image:
-        'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
-      notificationText: 'Alex Johnson and 3 others liked your post.',
-      timestamp: '5h',
-      isRead: true,
-    },
-    {
-      id: 3,
-      image:
-        'https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE=',
-      notificationText: 'Sarah Lee sent you a friend request.',
-      timestamp: '1d',
-      isRead: false,
-    },
-  ];
+  const [notifications, setNotifications] = useState<NotificationCardProp[]>([]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -92,9 +68,9 @@ export default function Notification() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.notificationsList}>
-          {notifications.map(notification => (
+          {notifications.map((notification, index) => (
             <NotificationCard
-              key={notification.id}
+              key={index}
               image={notification.image}
               notificationText={notification.notificationText}
               timestamp={notification.timestamp}
