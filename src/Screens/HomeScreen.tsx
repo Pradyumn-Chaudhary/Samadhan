@@ -12,13 +12,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView from 'react-native-map-clustering';
 import { Marker } from 'react-native-maps';
-import {
-  Bell,
-  BellDot,
-  TriangleAlert,
-  Satellite,
-  LocateFixed,
-} from 'lucide-react-native';
+import { Bell, BellDot, TriangleAlert, Satellite } from 'lucide-react-native';
 import { useUser } from '../context/UserContext';
 import auth from '@react-native-firebase/auth';
 import axios from 'axios';
@@ -41,7 +35,6 @@ export default function HomeScreen({ navigation }: any) {
     longitude: 77.49547,
   });
   const [Issues, setIssues] = useState<IssueType[]>([]);
-  const [region, setRegion] = useState<any | null>(null);
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -170,7 +163,10 @@ export default function HomeScreen({ navigation }: any) {
   };
 
   const debouncedFetch = debounce((region: any) => {
-    setRegion(region);
+    setUser((prevUser: UserType) => ({
+      ...prevUser, // Keep existing latitude and longitude
+      region: region,
+    }));
     const { latitude, longitude, latitudeDelta, longitudeDelta } = region;
     const north = latitude + latitudeDelta / 2;
     const south = latitude - latitudeDelta / 2;
@@ -180,8 +176,8 @@ export default function HomeScreen({ navigation }: any) {
   }, 500);
 
   useEffect(() => {
-    if (!region) return;
-    const { latitude, longitude, latitudeDelta, longitudeDelta } = region;
+    if (!user.region) return;
+    const { latitude, longitude, latitudeDelta, longitudeDelta } = user.region;
     const north = latitude + latitudeDelta / 2;
     const south = latitude - latitudeDelta / 2;
     const east = longitude + longitudeDelta / 2;
@@ -226,6 +222,7 @@ export default function HomeScreen({ navigation }: any) {
         {/* Check if we have valid coordinates before rendering the map */}
         <MapView
           style={styles.map}
+          mapType={mapType}
           region={{
             latitude: location.latitude,
             longitude: location.longitude,

@@ -24,8 +24,7 @@ export type UserType = {
   user_id: string | null;
   full_name: string | null;
   email: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  region: object | null;
 };
 
 export type LocationType = {
