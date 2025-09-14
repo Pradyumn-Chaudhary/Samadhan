@@ -33,6 +33,7 @@ export type LocationType = {
 };
 
 export type IssueType = {
+  issue_id: string,
   latitude?: number;
   longitude?: number;
   category: string;

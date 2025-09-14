@@ -135,6 +135,7 @@ export default function HomeScreen({ navigation }: any) {
     east: number;
     west: number;
   }) => {
+    console.log('FETCHING ISSUES');
     // ✅ CLEAR PREVIOUS MARKERS IMMEDIATELY
     setIssues([]);
     try {
@@ -221,7 +222,6 @@ export default function HomeScreen({ navigation }: any) {
       </View>
 
       <View style={styles.container}>
-        {/* Check if we have valid coordinates before rendering the map */}
         <MapView
           style={styles.map}
           mapType={mapType}
@@ -234,14 +234,12 @@ export default function HomeScreen({ navigation }: any) {
           onRegionChangeComplete={debouncedFetch}
           showsUserLocation={true}
         >
-          {Issues.map((issue, index) => {
+          {Issues.map(issue => {
             if (!issue.latitude || !issue.longitude) return null; // safety check
-
-            const key = `${index}-${issue.latitude}-${issue.longitude}-${issue.category}`;
 
             return (
               <Marker
-                key={key}
+                key={issue.issue_id}
                 coordinate={{
                   latitude: issue.latitude,
                   longitude: issue.longitude,
