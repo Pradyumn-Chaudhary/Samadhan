@@ -37,10 +37,7 @@ export default function NewReport({ navigation }: any) {
   const [paragraphText, setParagraphText] = useState('');
   const [showRecorder, setShowRecorder] = useState(false);
   const [submitting, setsubmitting] = useState(false);
-
   const { user } = useUser();
-  const [currentLatitude, setCurrentLatitude] = useState(user.latitude);
-  const [currentLongitude, setCurrentLongitude] = useState(user.longitude);
 
   const requestStoragePermission = async () => {
     if (Platform.OS === 'android') {
@@ -163,7 +160,6 @@ export default function NewReport({ navigation }: any) {
       });
       const baseUrl = `${BACKEND_URL}/users/createReport`;
       const createReport = await axios.post(`${baseUrl}`, {
-        //TODO
         user_id: user.user_id,
         photo_url: photoUrl,
         category: selectedCategory,
