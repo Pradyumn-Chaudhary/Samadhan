@@ -136,8 +136,6 @@ export default function HomeScreen({ navigation }: any) {
     west: number;
   }) => {
     console.log('FETCHING ISSUES');
-    // ✅ CLEAR PREVIOUS MARKERS IMMEDIATELY
-    setIssues([]);
     try {
       const response = await axios.get(`${BACKEND_URL}/map/issues`, {
         params: {

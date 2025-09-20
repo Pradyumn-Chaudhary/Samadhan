@@ -305,9 +305,9 @@ export default function NewReport({ navigation }: any) {
                     onChangeText={setParagraphText}
                     editable={!submitting}
                   />
-                  {/* <TouchableOpacity style={styles.micIcon} onPress={()=>setShowRecorder(true)}>
+                  <TouchableOpacity style={styles.micIcon} onPress={()=>setShowRecorder(true)}>
                     <Mic size={22} color="#667eea" />
-                  </TouchableOpacity> */}
+                  </TouchableOpacity> 
                 </View>
               )}
             </View>

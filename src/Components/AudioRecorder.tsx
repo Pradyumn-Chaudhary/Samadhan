@@ -1,87 +1,266 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Mic, Square, Play, X } from 'lucide-react-native';
+import { Mic, Square, Play, Trash2, X } from 'lucide-react-native';
 
-export default function AudioRecorder({ onClose }: { onClose: () => void }) {
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Audio Recorder</Text>
-        <TouchableOpacity onPress={onClose}>
-          <X size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
+// A simple hook to format time
+const useTimer = (isActive: boolean) => {
+  const [seconds, setSeconds] = useState(0);
 
-      {/* Main Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity style={styles.controlButton}>
-          <Mic size={36} color="red" />
-          <Text style={styles.label}>Record</Text>
-        </TouchableOpacity>
+  useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+    const interval = setInterval(() => {
+      setSeconds(s => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isActive]);
 
-        <TouchableOpacity style={styles.controlButton}>
-          <Square size={36} color="black" />
-          <Text style={styles.label}>Stop</Text>
-        </TouchableOpacity>
+  const formatTime = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60)
+      .toString()
+      .padStart(2, '0');
+    const secs = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+  };
 
-        <TouchableOpacity style={styles.controlButton}>
-          <Play size={36} color="green" />
-          <Text style={styles.label}>Play</Text>
-        </TouchableOpacity>
-      </View>
+  return { time: formatTime(seconds), reset: () => setSeconds(0) };
+};
 
-      {/* Timer / Status */}
-      <View style={styles.footer}>
-        <Text style={styles.timer}>00:00</Text>
-      </View>
-    </View>
-  );
+export default function AudioRecorderRedesigned({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  const [status, setStatus] = useState<'idle' | 'recording' | 'finished'>(
+    'idle',
+  );
+  const { time, reset } = useTimer(status === 'recording');
+
+  const handleRecordPress = () => {
+    if (status === 'idle') {
+      reset();
+      setStatus('recording');
+      // Start recording logic here...
+    } else if (status === 'recording') {
+      setStatus('finished');
+      // Stop recording logic here...
+    }
+  };
+
+  const handleDiscard = () => {
+    reset();
+    setStatus('idle');
+    // Discard/delete logic here...
+  };
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <X size={24} color="#6B7280" />
+      </TouchableOpacity>
+
+      <View style={styles.display}>
+        <Text style={styles.timer}>{time}</Text>
+        <Text style={styles.statusText}>
+          {status === 'recording'
+            ? 'Recording...'
+            : status === 'idle'
+            ? 'Tap to Record'
+            : 'Finished'}
+        </Text>
+      </View>
+
+      <View style={styles.controls}>
+        {status !== 'finished' ? (
+          <TouchableOpacity
+            style={[
+              styles.recordButton,
+              status === 'recording' && styles.recordingActive,
+            ]}
+            onPress={handleRecordPress}
+          >
+            {status === 'recording' ? (
+              <Square size={32} color="white" fill="white" />
+            ) : (
+              <Mic size={32} color="white" />
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.postRecordControls}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={handleDiscard}
+            >
+              <Trash2 size={28} color="#EF4444" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.playButton}>
+              <Play size={32} color="white" fill="white" />
+            </TouchableOpacity>
+            {/* You can add a save/upload button here */}
+          </View>
+        )}
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    margin: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    width: '100%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  controls: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 30,
-  },
-  controlButton: {
-    alignItems: 'center',
-  },
-  label: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#333',
-  },
-  footer: {
-    alignItems: 'center',
-  },
-  timer: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-});
+  container: {
+    backgroundColor: '#F3F4F6', // Off-white background
+    borderRadius: 24,
+    padding: 24,
+    margin: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 5,
+    width: '100%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+  },
+  display: {
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 16,
+  },
+  timer: {
+    fontSize: 48,
+    fontWeight: '300', // Lighter font weight
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  statusText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  controls: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  recordButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#3B82F6', // A friendly blue
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recordingActive: {
+    backgroundColor: '#EF4444', // A clear red for recording
+  },
+  postRecordControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+  },
+  iconButton: {
+    padding: 16,
+  },
+  playButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#10B981', // A green for play/confirm
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+}); 
+
+// *
+
+// import React from 'react';
+// import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+// import { Mic, Square, Play, X } from 'lucide-react-native';
+
+// export default function AudioRecorder({ onClose }: { onClose: () => void }) {
+//   return (
+//     <View style={styles.container}>
+//       {/* Header */}
+//       <View style={styles.header}>
+//         <Text style={styles.title}>Audio Recorder</Text>
+//         <TouchableOpacity onPress={onClose}>
+//           <X size={24} color="#333" />
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Main Controls */}
+//       <View style={styles.controls}>
+//         <TouchableOpacity style={styles.controlButton}>
+//           <Mic size={36} color="red" />
+//           <Text style={styles.label}>Record</Text>
+//         </TouchableOpacity>
+
+//         <TouchableOpacity style={styles.controlButton}>
+//           <Square size={36} color="black" />
+//           <Text style={styles.label}>Stop</Text>
+//         </TouchableOpacity>
+
+//         <TouchableOpacity style={styles.controlButton}>
+//           <Play size={36} color="green" />
+//           <Text style={styles.label}>Play</Text>
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Timer / Status */}
+//       <View style={styles.footer}>
+//         <Text style={styles.timer}>00:00</Text>
+//       </View>
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     backgroundColor: '#fff',
+//     borderRadius: 16,
+//     padding: 20,
+//     margin: 16,
+//     shadowColor: '#000',
+//     shadowOpacity: 0.1,
+//     shadowRadius: 8,
+//     elevation: 4,
+//     width: '100%',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//   },
+//   title: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//   },
+//   controls: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-around',
+//     marginVertical: 30,
+//   },
+//   controlButton: {
+//     alignItems: 'center',
+//   },
+//   label: {
+//     marginTop: 6,
+//     fontSize: 14,
+//     color: '#333',
+//   },
+//   footer: {
+//     alignItems: 'center',
+//   },
+//   timer: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//     color: '#333',
+//   },
+// });
+
+
+//* 
 
 // import React, { useState, useEffect } from 'react';
 // import {
