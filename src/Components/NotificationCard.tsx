@@ -4,45 +4,32 @@ import { Dot } from 'lucide-react-native';
 import { NotificationCardProp } from '../types/propType';
 
 export const NotificationCard = ({
-  image,
-  notificationText,
-  timestamp,
+  message,
   isRead,
+  created_at,
 }: NotificationCardProp) => {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      style={[styles.card, !isRead && styles.unreadCard]}
+      style={styles.card}
+      // style={[styles.card, !isRead && styles.unreadCard]}
     >
-      {/* Profile Picture / Icon */}
-      <View style={styles.imageContainer}>
-        {image ? (
-          <Image
-            source={
-              typeof image === 'string' ? { uri: image } : image
-            }
-            style={styles.profileImage}
-          />
-        ) : (
-          <View style={styles.defaultImagePlaceholder} />
-        )}
-      </View>
-
       {/* Notification Content */}
       <View style={styles.contentContainer}>
         <Text
-          style={[styles.notificationText, !isRead && styles.unreadText]}
+          style={styles.notificationText}
+          // style={[styles.notificationText, !isRead && styles.unreadText]}
           numberOfLines={2}
         >
-          {notificationText}
+          {message}
         </Text>
-        <Text style={styles.timestamp}>{timestamp}</Text>
+        <Text style={styles.timestamp}>{created_at}</Text>
       </View>
 
       {/* Unread Indicator */}
-      {!isRead && (
+      {/* {!isRead && (
         <Dot size={24} color="#007AFF" />
-      )}
+      )} */}
     </TouchableOpacity>
   );
 };

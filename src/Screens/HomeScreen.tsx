@@ -25,7 +25,7 @@ import { getIcon } from '../utils/getIcon';
 import { getPinColor } from '../utils/getPinColor';
 
 export default function HomeScreen({ navigation }: any) {
-  const [haveNotification, setHaveNotification] = useState(true);
+  const [haveNotification, setHaveNotification] = useState(false);
   const [open, setOpen] = useState(true);
   const [mapType, setMapType] = useState<'standard' | 'hybrid'>('standard');
   const { user, setUser } = useUser();

@@ -153,22 +153,24 @@ export default function NewReport({ navigation }: any) {
       }
       const location = await getCurrentLocation();
 
-      const photoUrl = await uploadMedia({
-        mediaUri: imageAsset.uri!,
-        mediaMimeType: imageAsset.type!,
-        uploadType: 'photo',
-      });
-      const baseUrl = `${BACKEND_URL}/users/createReport`;
-      const createReport = await axios.post(`${baseUrl}`, {
-        user_id: user.user_id,
-        photo_url: photoUrl,
-        category: selectedCategory,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        description: paragraphText,
-        audio_url: '',
-      });
-      console.log(createReport);
+      if (location) {
+        const photoUrl = await uploadMedia({
+          mediaUri: imageAsset.uri!,
+          mediaMimeType: imageAsset.type!,
+          uploadType: 'photo',
+        });
+        const baseUrl = `${BACKEND_URL}/users/createReport`;
+        const createReport = await axios.post(`${baseUrl}`, {
+          user_id: user.user_id,
+          photo_url: photoUrl,
+          category: selectedCategory,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          description: paragraphText,
+          audio_url: '',
+        });
+        console.log(createReport);
+      }
     } catch (err: any) {
       console.error('Submission failed:', err);
       const errorMessage = err.message || 'An unknown error occurred.';
@@ -305,9 +307,12 @@ export default function NewReport({ navigation }: any) {
                     onChangeText={setParagraphText}
                     editable={!submitting}
                   />
-                  <TouchableOpacity style={styles.micIcon} onPress={()=>setShowRecorder(true)}>
+                  <TouchableOpacity
+                    style={styles.micIcon}
+                    onPress={() => setShowRecorder(true)}
+                  >
                     <Mic size={22} color="#667eea" />
-                  </TouchableOpacity> 
+                  </TouchableOpacity>
                 </View>
               )}
             </View>

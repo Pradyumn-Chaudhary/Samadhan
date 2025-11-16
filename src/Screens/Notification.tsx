@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, CheckCheck } from 'lucide-react-native';
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -11,12 +11,34 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationCard } from '../Components/NotificationCard';
 import { NotificationCardProp } from '../types/propType';
+import { useUser } from '../context/UserContext';
+import axios from 'axios';
+import { BACKEND_URL } from '@env';
 
 export default function Notification() {
+  const { user } = useUser();
   const navigation = useNavigation();
-  const [notifications, setNotifications] = useState<NotificationCardProp[]>([]);
+  const [notifications, setNotifications] = useState<NotificationCardProp[]>(
+    [],
+  );
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const fetchNotifications = async () => {
+    const response = await axios.get(`${BACKEND_URL}/users/getNotification`, {
+      params: {
+        user_id: user.user_id,
+        // page: 1,
+        // limit: 20,
+      },
+    });
+    console.log(response.data);
+    setNotifications(response.data);
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -68,13 +90,10 @@ export default function Notification() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.notificationsList}>
-          {notifications.map((notification, index) => (
+          {notifications.map((notification) => (
             <NotificationCard
-              key={index}
-              image={notification.image}
-              notificationText={notification.notificationText}
-              timestamp={notification.timestamp}
-              isRead={notification.isRead}
+              key={notification.notification_id}
+              {...notification}
             />
           ))}
         </View>

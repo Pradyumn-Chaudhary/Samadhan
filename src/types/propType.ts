@@ -1,8 +1,8 @@
 export type NotificationCardProp = {
-  image?: string | number;
-  notificationText: string;
-  timestamp: string;
+  notification_id: string;
+  message: string;
   isRead: boolean;
+  created_at: string; 
 };
 
 export type ReportCardProp = {
