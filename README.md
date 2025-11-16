@@ -1,5 +1,5 @@
 # Samadhan (CityGuard): A Full-Stack GovTech Platform
-Samadhan (also known as CityGuard) is a full-stack, deployed GovTech platform designed to bridge the gap between citizens and municipal corporations, transforming civic issue reporting from a reactive chore into a proactive, transparent, and data-driven process.
+Samadhan is a full-stack, deployed GovTech platform designed to bridge the gap between citizens and municipal corporations, transforming civic issue reporting from a reactive chore into a proactive, transparent, and data-driven process.
 
 # 🚀 Live Demonstration & Access
 
