@@ -7,7 +7,7 @@ Samadhan (also known as CityGuard) is a full-stack, deployed GovTech platform de
 - [Download Samadhan App v1.0.0](https://github.com/Pradyumn-Chaudhary/Samadhan/releases/download/v1.0.0/app-release.apk)
 - [Video Link](https://youtu.be/Pv5fTREiyuU?si=GT2au5QiEg6akst6)
 
-### This architecture is live and active for 8 different cities in Rajasthan:
+## This architecture is live and active for 8 different cities in Rajasthan:
 1. Jodhpur
 2. Jaipur
 3. Jaisalmer
@@ -16,3 +16,8 @@ Samadhan (also known as CityGuard) is a full-stack, deployed GovTech platform de
 6. Karauli
 7. Kota
 8. Alwar
+
+## Test Credentials for Web Portal (Jodhpur Region):
+- Admin: poortigupta2309@gmail.com | Password: 12345678
+- Manager (Road Department): nishthajain@gmail.com | Password: 123456789
+- Staff Member (Road Department): kuldeepsingh@gmail.com | Password: 123456789
