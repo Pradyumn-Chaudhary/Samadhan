@@ -137,10 +137,18 @@ export default function NewReport({ navigation }: any) {
     longitude: number;
   }> => {
     return new Promise((resolve, reject) => {
+      // First try high-accuracy GPS (15 s)
       Geolocation.getCurrentPosition(
         position => resolve(position.coords),
-        error => reject(error),
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 },
+        _gpsError => {
+          // GPS timed-out or unavailable — fall back to network/cell location
+          Geolocation.getCurrentPosition(
+            position => resolve(position.coords),
+            networkError => reject(networkError),
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
+          );
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
       );
     });
   };
@@ -298,9 +306,39 @@ export default function NewReport({ navigation }: any) {
     try {
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
-        throw new Error('Location permission denied.');
+        Alert.alert(
+          'Location Required',
+          'Please enable location permission in Settings so we can pinpoint the issue.',
+        );
+        setsubmitting(false);
+        return;
       }
-      const location = await getCurrentLocation();
+
+      let location: { latitude: number; longitude: number };
+      try {
+        location = await getCurrentLocation();
+      } catch (locErr: any) {
+        // POSIX error code 3 = timeout; code 2 = unavailable
+        const code: number = locErr?.code ?? -1;
+        if (code === 3 || locErr?.message?.toLowerCase().includes('timed out')) {
+          Alert.alert(
+            'Location Unavailable',
+            "We couldn't get your location — GPS signal is weak.\n\nTry stepping outside or enabling Wi-Fi, then submit again.",
+          );
+        } else if (code === 2) {
+          Alert.alert(
+            'Location Unavailable',
+            'Location services appear to be off. Please turn on Location in your device Settings and try again.',
+          );
+        } else {
+          Alert.alert(
+            'Location Error',
+            'We were unable to retrieve your location. Please try again.',
+          );
+        }
+        setsubmitting(false);
+        return;
+      }
 
       const photoUrl = await uploadMedia({
         mediaUri: imageAsset.uri!,
@@ -319,13 +357,45 @@ export default function NewReport({ navigation }: any) {
         audio_url: '',
       });
       console.log(createReport);
+
+      // ✅ Only navigate home on success
+      navigation.navigate('HomeScreen');
     } catch (err: any) {
       console.error('Submission failed:', err);
-      const errorMessage = err.message || 'An unknown error occurred.';
-      Alert.alert('Submission Failed', errorMessage);
+
+      // Try to extract a human-readable message from the backend response
+      const serverMessage: string | undefined =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.response?.data?.detail;
+
+      const httpStatus: number | undefined = err?.response?.status;
+
+      let title = 'Submission Failed';
+      let body = serverMessage || err.message || 'Something went wrong. Please try again.';
+
+      if (httpStatus === 409 || body.toLowerCase().includes('duplicate')) {
+        title = 'Already Reported';
+        body =
+          serverMessage ||
+          'This issue has already been reported nearby. Thank you for caring — our team is on it!';
+      } else if (httpStatus === 401 || httpStatus === 403) {
+        title = 'Session Expired';
+        body = 'Please sign in again and retry.';
+      } else if (httpStatus && httpStatus >= 500) {
+        title = 'Server Error';
+        body = 'Our servers are having trouble right now. Please try again in a moment.';
+      } else if (err.code === 'ECONNABORTED' || body.toLowerCase().includes('timeout')) {
+        title = 'Connection Timeout';
+        body = 'The request took too long. Please check your internet connection and try again.';
+      } else if (!err.response) {
+        title = 'No Internet';
+        body = 'Check your internet connection and try again.';
+      }
+
+      Alert.alert(title, body);
     } finally {
       setsubmitting(false);
-      navigation.navigate('HomeScreen');
     }
   };
 
