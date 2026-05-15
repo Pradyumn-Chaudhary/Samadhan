@@ -21,6 +21,7 @@ const FILTER_OPTIONS = [
   { label: 'Submitted', value: 'Submitted' },
   { label: 'Acknowledged', value: 'Acknowledged' },
   { label: 'Assigned', value: 'Assigned' },
+  { label: 'In Progress', value: 'In Progress' },
   { label: 'Resolved', value: 'Resolved' },
 ];
 

@@ -10,6 +10,10 @@ const STATUS_STYLES: Record<
     color: "#f59e0b", // Amber
     background: "#fffbeb",
   },
+  'In Progress': {
+    color: "#06b6d4", // Cyan
+    background: "#ecfeff",
+  },
   Submitted: {
     color: "#3b82f6", // Blue
     background: "#eff6ff",
